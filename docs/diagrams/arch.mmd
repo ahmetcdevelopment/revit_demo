@@ -1,0 +1,21 @@
+flowchart LR
+  subgraph TOP["KULLANICI"]
+    direction TB
+    U(["Mimar"]) -->|doğal dil| C["Claude"]
+  end
+  subgraph B["BEYİN · Python"]
+    direction TB
+    P["İmar motoru<br/>madde atıflı"] --> PL["Planlayıcı<br/>BuildingSpec"] --> V["validate_spec<br/>offline testler"] --> CO["Derleyici<br/>sıralı Op"]
+  end
+  subgraph R["REVIT 2027 · C# eklenti"]
+    direction TB
+    H["RpcServer<br/>kuyruk"] --> O["Ops<br/>sıcak yükleme"] --> TG["Transaction<br/>Group"] --> M[(".rvt modeli")]
+  end
+  subgraph OUT["ÇIKTI VE KANIT"]
+    direction TB
+    I["Revit IFC4"] --> IDS["IDS doğrulama"] --> VF["verify_model"] --> W["Tarayıcı 3B"]
+  end
+  TOP -- "MCP · stdio" --> B
+  B -- "JSON-RPC · token" --> R
+  R -- "IFC · readback" --> OUT
+  style C fill:#B4492F,stroke:#B4492F,color:#fff

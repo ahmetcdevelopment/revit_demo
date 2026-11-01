@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Hot-reloadable half of the add-in: loaded by the host (RevitBridge.dll) from bytes, so it can be rebuilt while Revit runs. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>RevitBridge.Ops</AssemblyName>
+    <RootNamespace>RevitBridge</RootNamespace>
+    <Version>0.4.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RevitBridge\RevitBridge.csproj" Private="false" />
+    <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2027.3.0" ExcludeAssets="runtime" />
+    <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2027.3.0" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+</Project>

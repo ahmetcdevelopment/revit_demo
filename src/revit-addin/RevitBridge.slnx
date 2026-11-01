@@ -1,0 +1,4 @@
+﻿<Solution>
+  <Project Path="RevitBridge/RevitBridge.csproj" />
+  <Project Path="RevitBridge.Ops/RevitBridge.Ops.csproj" />
+</Solution>

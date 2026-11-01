@@ -1,0 +1,136 @@
+# Planlı Alanlar İmar Yönetmeliği (RG 03.07.2017 - 30113) — kural kataloğu
+# Kaynak: mevzuat.gov.tr resmi PDF (MevzuatNo=23722, MevzuatTur=7, Tertip=5), 57 sayfa.
+# Okunan metin 2026-10-28'de çekildi; metin RG-1/7/2026-33297 değişikliğine kadar işlenmiş görünüyor.
+# `verified: true` = değer, yukarıdaki resmi metinden birebir okunup işlendi.
+# `overridable_by_plan: true` = madde "uygulama imar planında aksine hüküm yoksa" der; parselin
+# imar durumu / plan notları BU DEĞERLERİ DEĞİŞTİREBİLİR. Bu yüzden asıl kaynak imar durumudur.
+document:
+  name: Planlı Alanlar İmar Yönetmeliği
+  gazette: "RG 03.07.2017 - 30113"
+  url: https://www.mevzuat.gov.tr/MevzuatMetin/yonetmelik/7.5.23722.pdf
+  checked_on: "2026-10-28"
+
+rules:
+  # --- Bahçe mesafeleri (Madde 23) ---------------------------------------------------------
+  - id: PAIY-M23-ON
+    article: "Madde 23(1)(a)"
+    summary: "Ön bahçe ve yol kenarına rastlayan bahçe mesafeleri ile kamusal alanlara komşu bahçe mesafeleri en az 5.00 m"
+    param: setbacks.front
+    op: ">="
+    value: 5.0
+    unit: m
+    overridable_by_plan: true
+    verified: true
+  - id: PAIY-M23-YAN
+    article: "Madde 23(1)(b)"
+    summary: "Yan bahçe mesafesi en az 3.00 m (bitişik nizamda komşuya bitişik kenarda uygulanmaz)"
+    param: setbacks.side_free
+    op: ">="
+    value: 3.0
+    unit: m
+    overridable_by_plan: true
+    verified: true
+  - id: PAIY-M23-ARKA
+    article: "Madde 23(1)(c)"
+    summary: "Arka bahçe mesafesi en az 3.00 m"
+    param: setbacks.rear
+    op: ">="
+    value: 3.0
+    unit: m
+    overridable_by_plan: true
+    verified: true
+  - id: PAIY-M23-KAT-ARTIS
+    article: "Madde 23(1)(ç)"
+    summary: "Yan ve arka bahçe mesafeleri, dörtten fazla katlı binalarda 4 katın üzerindeki her kat için 0.50 m artırılır (bodrum dahil sayım). 3 katlı binada uygulanmaz."
+    param: kat_adedi_max
+    op: "<="
+    value: 4
+    unit: kat
+    overridable_by_plan: false
+    verified: true
+
+  - id: PAIY-M24-BLOK-ARASI
+    article: "Madde 24(2) + Madde 23(1)(b)(c)"
+    summary: "Bir parselde birden fazla bina: binalar arası mesafe, her binanın yüksekliğine göre yaklaşma mesafeleri ayrı ayrı bulunup toplanır. Her biri 3.00 m (≤ 4 kat) → en az 6.00 m. (Türetilmiş: M24(2) toplama kuralı + M23 yan/arka 3.00 m)"
+    param: "blocks.gap"
+    op: ">="
+    value: 6.0
+    unit: m
+    overridable_by_plan: true
+    verified: true
+
+  # --- Tanımlar ve alan (Madde 4, 21, 22) -------------------------------------------------
+  - id: PAIY-M4-TAKS
+    article: "Madde 4(1)(cccc)"
+    summary: "TAKS = taban alanının imar parseli alanına oranı"
+    verified: true
+  - id: PAIY-M4-BITISIK
+    article: "Madde 4(1)(pppp)(2)"
+    summary: "Bitişik nizam: bir veya birden fazla komşu parseldeki binalara bitişik olan ve ortak alandan arka bahçeye çıkış sağlanan yapı nizamı"
+    verified: true
+  - id: PAIY-M21-EMSAL-YOK
+    article: "Madde 21(4)"
+    summary: "Planda emsal verilmeyen parsellerde katlar alanı = TAKS x kat adedi"
+    verified: true
+  - id: PAIY-M22-ALAN-DISI
+    article: "Madde 22(1)(l)"
+    summary: "Açık çıkma şartlarını taşıyan balkonlar, kat ve ara sahanlıkları dahil açık/kapalı merdiven evi, (bağımsız bölüm net alanının %20'sini geçmemek kaydıyla) katlar alanına dahil edilmez. Kapsam/yorum belirsiz: KAKS hesabında bu alanlar muhafazakar biçimde SAYILIR."
+    verified: true
+
+  # --- Kat yüksekliği (Madde 28) ----------------------------------------------------------
+  - id: PAIY-M28-KAT-YUKSEKLIK
+    article: "Madde 28(1)(c)"
+    summary: "Konut bölgelerinde zemin ve normal katlarda döşeme üstünden döşeme üstüne en fazla 3.60 m; bodrum hariç 3 katı geçmeyen binalarda 4.00 m (planda daha fazlası belirlenmemişse)"
+    param: floor_height_m
+    op: "<="
+    value: 4.0
+    unit: m
+    overridable_by_plan: true
+    verified: true
+  - id: PAIY-M28-IC-YUKSEKLIK
+    article: "Madde 28(4)"
+    summary: "İskân edilen katların iç yüksekliği (asma katlar hariç) 2.60 m'den az olamaz"
+    param: clear_height_m
+    op: ">="
+    value: 2.6
+    unit: m
+    verified: true
+
+  # --- Piyes (mahal) asgarileri (Madde 29) ------------------------------------------------
+  - {id: PAIY-M29-SALON-ALAN, article: "Madde 29(1)", summary: "Oturma odası net alan >= 12.0 m2", param: "room.living.area", op: ">=", value: 12.0, unit: m2, verified: true}
+  - {id: PAIY-M29-SALON-KENAR, article: "Madde 29(1)", summary: "Oturma odası dar kenar >= 3.00 m", param: "room.living.short_side", op: ">=", value: 3.0, unit: m, verified: true}
+  - {id: PAIY-M29-YATAK-ALAN, article: "Madde 29(1)", summary: "Yatak odası net alan >= 9.00 m2", param: "room.bedroom.area", op: ">=", value: 9.0, unit: m2, verified: true}
+  - {id: PAIY-M29-YATAK-KENAR, article: "Madde 29(1)", summary: "Yatak odası dar kenar >= 2.50 m", param: "room.bedroom.short_side", op: ">=", value: 2.5, unit: m, verified: true}
+  - {id: PAIY-M29-MUTFAK-ALAN, article: "Madde 29(1)", summary: "Mutfak/yemek pişirme yeri net alan >= 3.30 m2", param: "room.kitchen.area", op: ">=", value: 3.3, unit: m2, verified: true}
+  - {id: PAIY-M29-MUTFAK-KENAR, article: "Madde 29(1)", summary: "Mutfak dar kenar >= 1.50 m", param: "room.kitchen.short_side", op: ">=", value: 1.5, unit: m, verified: true}
+  - {id: PAIY-M29-BANYO-ALAN, article: "Madde 29(1)", summary: "Banyo net alan >= 3.00 m2", param: "room.bath.area", op: ">=", value: 3.0, unit: m2, verified: true}
+  - {id: PAIY-M29-BANYO-KENAR, article: "Madde 29(1)", summary: "Banyo dar kenar >= 1.50 m", param: "room.bath.short_side", op: ">=", value: 1.5, unit: m, verified: true}
+  - {id: PAIY-M29-WC-ALAN, article: "Madde 29(1)", summary: "Tuvalet net alan >= 1.20 m2", param: "room.wc.area", op: ">=", value: 1.2, unit: m2, verified: true}
+  - {id: PAIY-M29-WC-KENAR, article: "Madde 29(1)", summary: "Tuvalet dar kenar >= 1.00 m", param: "room.wc.short_side", op: ">=", value: 1.0, unit: m, verified: true}
+  - {id: PAIY-M29-HOL, article: "Madde 29(3)", summary: "Hol ve koridor genişlikleri 1.20 m'den az olamaz", param: "room.hall.short_side", op: ">=", value: 1.2, unit: m, verified: true}
+
+  # --- Giriş ve merdiven (Madde 30, 31) ---------------------------------------------------
+  - {id: PAIY-M30-GIRIS, article: "Madde 30(1)", summary: "Bina giriş koridoru genişliği (umumi olmayan binalarda) en az 1.50 m", param: "core.entry_corridor_width", op: ">=", value: 1.5, unit: m, verified: true}
+  - {id: PAIY-M31-KOL, article: "Madde 31(1)(a)", summary: "Konut yapılarında ortak merdiven kolu ve sahanlık genişliği, yangın yönetmeliğinden hesaplanan kaçış genişliğinden az olmamak üzere en az 1.20 m", param: "stair.run_width", op: ">=", value: 1.2, unit: m, verified: true}
+  - {id: PAIY-M31-RIHT, article: "Madde 31(2)(a)", summary: "Basamak yüksekliği asansörsüz binalarda en fazla 0.16 m, asansörlü binalarda 0.18 m", param: "stair.riser_max_no_lift", op: "<=", value: 0.16, unit: m, verified: true}
+  - {id: PAIY-M31-BASAMAK, article: "Madde 31(2)(b)", summary: "Basamak genişliği 2a+b = 60..64 cm (a=yükseklik, b=genişlik); b >= 0.27 m", param: "stair.tread_min", op: ">=", value: 0.27, unit: m, verified: true}
+  - id: PAIY-M31-2AB
+    article: "Madde 31(2)(b)"
+    summary: "2a + b 60 ile 64 cm arasında"
+    param: stair.two_a_plus_b_cm
+    op: between
+    value: [60.0, 64.0]
+    unit: cm
+    verified: true
+  - {id: PAIY-M31-ALTI, article: "Madde 31(6)", summary: "Yüksekliği 1.80 m'den az merdiven altları kapatılır", verified: true}
+  - {id: PAIY-M32-ISIKLIK, article: "Madde 32(2)(a)", summary: "1-6 katlı binalarda ışıklık dar kenarı >= 1.50 m ve alanı >= 4.50 m2", param: "lightwell.area", op: ">=", value: 4.5, unit: m2, verified: true}
+
+  # --- Çıkmalar (Madde 41) ----------------------------------------------------------------
+  - id: PAIY-M41-CIKMA
+    article: "Madde 41(1)(a)(b)"
+    summary: "Kapalı/açık çıkmalar yol cephesinde yapı yaklaşma sınırından en fazla 1.50 m; yan/arka bahçelerde parsel sınırına 3.00 m'den fazla yaklaşmamak kaydıyla 1.50 m taşabilir"
+    verified: true
+  - id: PAIY-M41-BITISIK-CIKMA
+    article: "Madde 41(1)(b)(4)"
+    summary: "Bitişik nizamda (açık çıkmalar) bitişik olduğu komşu sınırına 2.00 m'den fazla yaklaşamaz"
+    verified: true

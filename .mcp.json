@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "revit-demo": {
+      "command": "uv",
+      "args": ["run", "--directory", ".", "python", "tools/mcp_server.py"]
+    }
+  }
+}

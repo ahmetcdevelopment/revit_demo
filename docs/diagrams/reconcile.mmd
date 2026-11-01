@@ -1,0 +1,14 @@
+flowchart LR
+  S["BuildingSpec<br/>spec_id"] --> OPS["Op listesi<br/>id + OpHash"] --> CMP{"Modeldeki<br/>SpecRef ·<br/>OpHash"}
+  CMP -->|yok| CR["oluştur"]
+  CMP -->|farklı| UP["güncelle"]
+  CMP -->|aynı| NO["dokunma"]
+  CMP -->|fazla| DEL["sil"]
+  CR --> TG
+  UP --> TG
+  NO --> TG
+  DEL --> TG
+  TG["Transaction<br/>Group"] -->|hata| RB["tümünü<br/>geri al"]
+  TG -->|başarı| OK["commit +<br/>readback"]
+  style RB fill:#7A2E22,stroke:#B4492F,color:#fff
+  style OK fill:#2F6B4F,stroke:#4CAF7A,color:#fff

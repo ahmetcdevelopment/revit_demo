@@ -1,0 +1,22 @@
+sequenceDiagram
+  actor K as Kullanıcı
+  participant C as Claude
+  participant B as Beyin
+  participant A as Eklenti
+  participant R as Revit
+  K->>C: 1495/26'ya 3 katlı bina
+  C->>B: load_parcel · check_zoning
+  B-->>C: yapılaşma alanı, TAKS/KAKS
+  C->>B: plan_building · validate_spec
+  B-->>C: spec_id · 595 op
+  C->>B: build_in_revit (dry_run)
+  B->>A: apply_ops (dry_run)
+  A->>R: işle ve geri al
+  A-->>C: oluşacak / değişmeyen
+  C->>B: build_in_revit (apply)
+  B->>A: apply_ops
+  A->>R: elemanlar + etiket
+  C->>B: verify_model
+  B->>A: read_back
+  B-->>C: 0 fark
+  C-->>K: model · IFC · rapor

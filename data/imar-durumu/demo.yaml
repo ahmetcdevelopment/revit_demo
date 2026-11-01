@@ -1,0 +1,18 @@
+# DEMO VARSAYIMI — gerçek bir imar durumu belgesi DEĞİLDİR.
+# Değerler yalnızca sistemi göstermek içindir; gerçek belge gelince bu dosya onunla değiştirilir.
+schema_version: "1.0"
+source_doc:
+  type: demo_assumption
+  file: null
+  date: null
+nizam: bitisik
+taks: 0.40
+kaks: 1.20
+hmax_m: 10.5
+kat_adedi_max: 3
+setbacks:
+  front: 5.0
+  side_free: 3.0
+  side_party: 0.0
+  rear: 3.0
+citations: {}   # boş: tüm kontroller "assumed" (varsayım) olarak raporlanır

@@ -1,0 +1,13 @@
+flowchart TB
+  subgraph S1["HAZIRLIK · Revit'siz, test edilebilir"]
+    direction LR
+    A["1 · Parsel<br/>TKGM"] --> B["2 · İmar<br/>TAKS · KAKS"] --> C["3 · Plan<br/>2 blok"] --> D["4 · Doğrula<br/>PAİY"] --> E["5 · Derle<br/>595 Op"]
+  end
+  subgraph S2["UYGULAMA VE KANIT · Revit'te"]
+    direction LR
+    F["6 · Dry-run"] --> G["7 · Uygula"] --> H["8 · Geri oku<br/>0 fark"] --> J["9 · IFC4<br/>+ IDS"] --> K["10 · Rapor<br/>+ 3B"]
+  end
+  S1 --> S2
+  style G fill:#B4492F,stroke:#B4492F,color:#fff
+  style H fill:#2F6B4F,stroke:#4CAF7A,color:#fff
+  style J fill:#2F6B4F,stroke:#4CAF7A,color:#fff

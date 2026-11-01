@@ -1,0 +1,25 @@
+[project]
+name = "revit-demo-brain"
+version = "0.1.0"
+description = "Claude-Revit bridge: parcel, zoning, planner, compiler, verification (the 'brain')"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "pydantic>=2",
+    "shapely>=2",
+    "pyproj>=3",
+    "ifcopenshell",
+    "pyyaml",
+    "jinja2",
+    "mcp>=2",
+    "ifctester>=0.9.0",
+]
+
+[dependency-groups]
+dev = ["pytest", "ruff"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100

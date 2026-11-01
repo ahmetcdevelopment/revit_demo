@@ -1,0 +1,21 @@
+flowchart TB
+  subgraph IN["GİRDİ"]
+    direction LR
+    D1["İmar durumu<br/>tapu · kroki"] ~~~ D2["2B ruhsat<br/>DWG/PDF"] ~~~ D3["Nokta bulutu"]
+  end
+  subgraph CORE["ÇEKİRDEK · bugün çalışıyor"]
+    direction LR
+    Z["Madde atıflı<br/>imar motoru"] --> S["BuildingSpec<br/>+ derleyici"] --> T["Test motoru<br/>readback · IDS"]
+  end
+  subgraph OUT["ÇIKTI"]
+    direction LR
+    R1["Revit modeli"] ~~~ R2["IFC4 · onay"] ~~~ R3["Web 3B"]
+  end
+  subgraph NEXT["GENİŞLEME · potansiyel"]
+    direction LR
+    N1["MEP · yapısal"] ~~~ N2["Çoklu parsel<br/>belediye paketleri"] ~~~ N3["Alternatif<br/>metraj · maliyet"]
+  end
+  IN --> CORE --> OUT
+  CORE -.-> NEXT
+  style CORE fill:#1E2B1F,stroke:#4CAF7A
+  style NEXT fill:#2A2118,stroke:#E0A13A

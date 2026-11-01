@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>RevitBridge</Name>
+    <Assembly>{{ASSEMBLY}}</Assembly>
+    <AddInId>7b1d6c2e-4a1f-4c53-9d2b-3f6a8e5c9a10</AddInId>
+    <FullClassName>RevitBridge.App</FullClassName>
+    <VendorId>ZRFW</VendorId>
+    <VendorDescription>zurafworks - Claude Revit bridge</VendorDescription>
+  </AddIn>
+</RevitAddIns>

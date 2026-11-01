@@ -1,0 +1,20 @@
+{
+  "parcel": "Karatay/Büyüksinan 1495/26",
+  "retrieved": "2026-10-30",
+  "method": "TKGM coordinate query GET /megsiswebapi.v3.1/api/parsel/{lat}/{lon}/ at 3 points (t=0.25,0.5,0.75) along each edge, 3 m outside the boundary",
+  "caveat": "TKGM coordinates have 5 decimals (~1 m): a point 3 m outside an edge can hit a neighbour or the road with about +-1 m uncertainty.",
+  "edges": {
+    "0": {"hits": ["1495/23", "1495/23", "1495/23"]},
+    "1": {"hits": ["1495/23", "1495/23", "1495/23"]},
+    "2": {"hits": ["1495/20", "1495/20", "1495/20"]},
+    "3": {"hits": ["1495/20", "1495/20", "1495/20"]},
+    "4": {"hits": ["1495/20", "1495/20", "1495/20"]},
+    "5": {"hits": [null, null, null], "far": "no parcel up to 14 m outward; parcel 20918/2 (Arsa) at 20 m -> public land >= 15 m wide"},
+    "6": {"hits": ["1495/13", "1495/13", "1495/13"]},
+    "7": {"hits": ["1495/13", "1495/13", "1495/14"]},
+    "8": {"hits": ["1495/14", "1495/14", "1495/14"]},
+    "9": {"hits": [null, null, null], "far": "parcel 1495/22 (13-storey apartment, 4177 m2) at 6 m outward -> street about 3-6 m wide"},
+    "10": {"hits": [null, null, null], "far": "same street as edge 9"}
+  },
+  "user_confirmed": {"road_edges": [5, 9, 10], "date": "2026-10-30"}
+}

@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3B Model · Parsel ve Bina</title>
+<style>
+  :root{--bg:#eef1f4;--panel:rgba(255,255,255,.92);--ink:#1b2631;--mute:#566573;--line:#d5d8dc;--acc:#8a3b2a}
+  @media (prefers-color-scheme:dark){:root{--bg:#1b2026;--panel:rgba(28,33,40,.92);--ink:#e8eaed;--mute:#aab2bd;--line:#3a4048}}
+  *{box-sizing:border-box}html,body{margin:0;height:100%;font:14px/1.45 system-ui,sans-serif;color:var(--ink);background:var(--bg);overflow:hidden}
+  #c{position:fixed;inset:0;width:100%;height:100%;display:block}
+  .panel{position:fixed;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.6rem .8rem;backdrop-filter:blur(6px)}
+  #top{top:12px;left:12px;right:12px;display:flex;gap:.8rem;align-items:center;flex-wrap:wrap}
+  #top h1{font-size:1rem;margin:0;font-weight:650}#top .sub{color:var(--mute);font-size:.82rem}
+  .kpi{display:flex;gap:.9rem;margin-left:auto;flex-wrap:wrap}.kpi div{text-align:right}.kpi b{display:block;font-size:1rem}.kpi span{color:var(--mute);font-size:.72rem}
+  #demo{background:#fdebd0;color:#4a3000;border:1px solid #d68910;border-radius:5px;padding:.15rem .5rem;font-size:.75rem;font-weight:650}
+  #side{top:78px;left:12px;width:236px;max-height:calc(100% - 100px);overflow:auto}
+  #side h2{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin:.7rem 0 .25rem}#side h2:first-child{margin-top:0}
+  label{display:flex;align-items:center;gap:.45rem;padding:.12rem 0;cursor:pointer;font-size:.88rem}
+  .sw{width:.7rem;height:.7rem;border-radius:2px;display:inline-block;flex:none;border:1px solid rgba(0,0,0,.2)}
+  input[type=range]{width:100%}button{font:inherit;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:5px;padding:.2rem .5rem;cursor:pointer}
+  button:hover{border-color:var(--acc)}.row{display:flex;gap:.3rem;flex-wrap:wrap;margin:.2rem 0}
+  #info{right:12px;bottom:12px;width:290px;font-size:.85rem;display:none}#info b{display:block;font-size:.95rem;margin-bottom:.2rem}#info code{font-size:.72rem;color:var(--mute);word-break:break-all}
+  #load{position:fixed;inset:0;display:grid;place-items:center;background:var(--bg);z-index:9}#load div{text-align:center;max-width:32rem;padding:1rem}
+  #bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:.6rem}#bar i{display:block;height:100%;width:0;background:var(--acc)}
+  .err{color:#c0392b;font-weight:650}
+  @media (max-width:700px){#side{width:auto;right:12px;top:auto;bottom:12px;max-height:38%}#info{display:none!important}.kpi{margin-left:0}}
+</style>
+<script type="importmap">{"imports":{"three":"./vendor/three/three.module.js","three/addons/":"./vendor/three/addons/"}}</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="load"><div><b id="loadmsg">Model yükleniyor…</b><div id="bar"><i id="barfill"></i></div></div></div>
+<div class="panel" id="top"><div><h1 id="title">3B Model</h1><div class="sub" id="subtitle"></div></div><span id="demo" hidden>DEMO VARSAYIMI</span><div class="kpi" id="kpi"></div></div>
+<div class="panel" id="side">
+  <h2>Görünüm</h2><div class="row"><button data-view="persp">Perspektif</button><button data-view="top">Üstten</button><button data-view="front">Ön</button></div>
+  <h2>Katlar</h2><div id="storeys"></div>
+  <h2>Eleman grupları</h2><div id="groups"></div>
+  <h2>Kesit (yükseklik)</h2><input id="clip" type="range" min="0" max="100" value="100"><div class="sub" id="cliplabel" style="color:var(--mute);font-size:.78rem"></div>
+  <h2>Seçenekler</h2>
+  <label><input type="checkbox" id="shadow" checked> Gölge</label>
+  <label><input type="checkbox" id="xray"> Duvarları saydamlaştır</label>
+  <label><input type="checkbox" id="parcel" checked> Parsel ve çekme çizgileri</label>
+</div>
+<div class="panel" id="info"></div>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const $ = (id) => document.getElementById(id);
+const fail = (msg) => { $('loadmsg').innerHTML = `<span class="err">${msg}</span>`; };
+if (location.protocol === 'file:') fail('Bu sayfa bir yerel sunucuyla açılmalı (tarayıcı dosyadan model yüklemeyi engeller).<br>Çalıştırın: <code>uv run python tools/view.py</code>');
+
+const GROUPS = [
+  ['wall', 'Duvar', '#d2cbbb', (u) => u.ifc === 'IfcWall'],
+  ['klinker', 'Klinker cephe', '#8a3b2a', (u) => u.klinker],
+  ['slab', 'Döşeme ve çatı', '#a9a9a6', (u) => u.ifc === 'IfcSlab' || u.ifc === 'IfcRoof'],
+  ['open', 'Kapı ve pencere', '#7aa7c4', (u) => u.ifc === 'IfcDoor' || u.ifc === 'IfcWindow' || (u.ifc === 'IfcBuildingElementProxy' && !u.klinker)],
+  ['stair', 'Merdiven ve korkuluk', '#a6a29a', (u) => ['IfcStairFlight', 'IfcStair', 'IfcRailing', 'IfcMember'].includes(u.ifc) ],
+  ['space', 'Mahaller (hacim)', '#6aa6d6', (u) => u.ifc === 'IfcSpace'],
+];
+const groupOf = (u) => (GROUPS.find((g) => g[3](u)) || [])[0] || 'open';
+const state = { groups: Object.fromEntries(GROUPS.map((g) => [g[0], g[0] !== 'space'])), storeys: {}, clip: 1, xray: false };
+
+const renderer = new THREE.WebGLRenderer({ canvas: $('c'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.localClippingEnabled = true;
+const scene = new THREE.Scene();
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+scene.background = new THREE.Color(dark ? 0x1b2026 : 0xe9eef3);
+scene.fog = new THREE.Fog(scene.background, 220, 520);
+const camera = new THREE.PerspectiveCamera(42, 1, 0.5, 2000);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.495;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8f96, 0.95));
+const sun = new THREE.DirectionalLight(0xfff3df, 1.9);
+sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.04;
+scene.add(sun, sun.target);
+const clipPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 100);
+
+function resize() { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+
+const toScene = (x, y) => new THREE.Vector3(x, 0, -y);          // spec/IFC local plane -> three (Y up)
+const parcelGroup = new THREE.Group(); scene.add(parcelGroup);
+let building = null; const nodes = [];
+let sceneInfo = null; let bounds = new THREE.Box3();
+
+async function loadScene() {
+  const res = await fetch('./scene.json'); if (!res.ok) throw new Error('scene.json bulunamadı');
+  sceneInfo = await res.json();
+  $('title').textContent = sceneInfo.title || '3B Model';
+  $('subtitle').textContent = sceneInfo.subtitle || '';
+  $('demo').hidden = !sceneInfo.demo_assumption;
+  $('kpi').innerHTML = (sceneInfo.kpis || []).map((k) => `<div><b>${k.value}</b><span>${k.label}</span></div>`).join('');
+  drawParcel(sceneInfo);
+}
+
+function line(points, color, dashed = false, width = 1) {
+  const g = new THREE.BufferGeometry().setFromPoints(points);
+  const m = dashed ? new THREE.LineDashedMaterial({ color, dashSize: 1.2, gapSize: 0.7 }) : new THREE.LineBasicMaterial({ color });
+  const l = new THREE.Line(g, m); if (dashed) l.computeLineDistances(); return l;
+}
+function drawParcel(info) {
+  const ring = info.parcel?.ring; if (!ring) return;
+  const shape = new THREE.Shape(ring.map(([x, y]) => new THREE.Vector2(x, y)));
+  const fill = new THREE.Mesh(new THREE.ShapeGeometry(shape), new THREE.MeshStandardMaterial({ color: dark ? 0x3f5a45 : 0xbfdcc2, roughness: 1, side: THREE.DoubleSide }));
+  fill.rotation.x = -Math.PI / 2; fill.position.y = -0.02; fill.scale.set(1, 1, 1); fill.receiveShadow = true;
+  // ShapeGeometry lies in XY; rotating about X by -90deg maps (x, y) -> (x, 0, -y), exactly toScene
+  parcelGroup.add(fill);
+  const roleColor = { front: 0xc0392b, rear: 0x2471a3, side_free: 0xd68910, side_party: 0x707b7c };
+  (info.parcel.edges || []).forEach((e) => parcelGroup.add(line([toScene(...e.a).setY(0.05), toScene(...e.b).setY(0.05)], roleColor[e.role] ?? 0x000000)));
+  (info.buildable ? [info.buildable] : []).forEach((poly) => {
+    const pts = poly.concat([poly[0]]).map(([x, y]) => toScene(x, y).setY(0.06)); parcelGroup.add(line(pts, 0x1e8449, true));
+  });
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(1200, 1200), new THREE.MeshStandardMaterial({ color: dark ? 0x2a3038 : 0xdfe4e9, roughness: 1 }));
+  ground.rotation.x = -Math.PI / 2; ground.position.y = -0.08; ground.receiveShadow = true; scene.add(ground);
+}
+
+function buildUi(storeyList) {
+  $('storeys').innerHTML = storeyList.map((s, i) => `<label><input type="checkbox" data-storey="${s.name}" checked> ${s.name} <small style="color:var(--mute)">${s.elevation.toFixed(2)} m</small></label>`).join('');
+  $('groups').innerHTML = GROUPS.map((g) => `<label><input type="checkbox" data-group="${g[0]}" ${state.groups[g[0]] ? 'checked' : ''}><i class="sw" style="background:${g[2]}"></i>${g[1]} <small data-n="${g[0]}" style="color:var(--mute)"></small></label>`).join('');
+  document.querySelectorAll('[data-storey]').forEach((el) => el.addEventListener('change', () => { state.storeys[el.dataset.storey] = el.checked; refresh(); }));
+  document.querySelectorAll('[data-group]').forEach((el) => el.addEventListener('change', () => { state.groups[el.dataset.group] = el.checked; refresh(); }));
+  storeyList.forEach((s) => (state.storeys[s.name] = true));
+}
+
+function refresh() {
+  const klinkerOn = state.groups.klinker;
+  nodes.forEach((n) => {
+    const u = n.userData; const g = groupOf(u);
+    let visible = state.groups[g] && (u.storey == null || state.storeys[u.storey] !== false);
+    n.visible = !!visible;
+  });
+  nodes.forEach((n) => n.traverse((o) => { if (o.isMesh) { const m = o.material; const wall = n.userData.ifc === 'IfcWall';
+    m.opacity = (state.xray && wall) ? 0.18 : (m.userData.baseOpacity ?? 1); m.transparent = m.opacity < 1; m.depthWrite = !m.transparent; } }));
+  document.querySelectorAll('[data-n]').forEach((el) => { el.textContent = nodes.filter((n) => groupOf(n.userData) === el.dataset.n).length; });
+}
+
+function frame(view = 'persp') {
+  const c = bounds.getCenter(new THREE.Vector3()); const s = bounds.getSize(new THREE.Vector3()); const r = Math.max(s.x, s.z) * 0.9 + 14;
+  controls.target.copy(c).setY(s.y * 0.35);
+  const pos = { persp: [r * 0.75, r * 0.62, r * 0.85], top: [0.01, r * 1.7, 0.01], front: [0.01, s.y * 0.6 + 2, r * 1.5] }[view];
+  camera.position.set(c.x + pos[0], pos[1], c.z + pos[2]); controls.update();
+}
+document.querySelectorAll('[data-view]').forEach((b) => b.addEventListener('click', () => frame(b.dataset.view)));
+
+function setSun() {
+  const c = bounds.getCenter(new THREE.Vector3()); const s = bounds.getSize(new THREE.Vector3()); const r = Math.max(s.x, s.z) * 0.8 + 30;
+  sun.position.set(c.x + r * 0.7, r * 1.1, c.z + r * 0.5); sun.target.position.copy(c);
+  const cam = sun.shadow.camera; cam.left = -r; cam.right = r; cam.top = r; cam.bottom = -r; cam.near = 1; cam.far = r * 4; cam.updateProjectionMatrix();
+}
+
+$('clip').addEventListener('input', () => {
+  const h = bounds.max.y + 0.4; const y = (Number($('clip').value) / 100) * h;
+  clipPlane.constant = y; $('cliplabel').textContent = Number($('clip').value) >= 100 ? 'kesit yok' : `${y.toFixed(1)} m üstü gizli`;
+  nodes.forEach((n) => n.traverse((o) => { if (o.isMesh) o.material.clippingPlanes = Number($('clip').value) >= 100 ? [] : [clipPlane]; }));
+});
+$('shadow').addEventListener('change', () => { sun.castShadow = $('shadow').checked; renderer.shadowMap.needsUpdate = true; });
+$('xray').addEventListener('change', () => { state.xray = $('xray').checked; refresh(); });
+$('parcel').addEventListener('change', () => { parcelGroup.visible = $('parcel').checked; });
+
+const ray = new THREE.Raycaster(); const mouse = new THREE.Vector2(); let picked = null; let down = null;
+renderer.domElement.addEventListener('pointerdown', (e) => { down = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener('pointerup', (e) => {
+  if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 4) return;
+  mouse.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(mouse, camera);
+  const hits = ray.intersectObjects(nodes.filter((n) => n.visible), true).filter((h) => !(h.object.material.transparent && h.object.parent.userData.ifc === 'IfcSpace'));
+  select(hits.length ? hits[0].object : null);
+});
+function select(obj) {
+  if (picked) picked.forEach(([m, c]) => m.emissive.setHex(c)); picked = null;
+  const info = $('info'); if (!obj) { info.style.display = 'none'; return; }
+  let n = obj; while (n && !n.userData.ifc) n = n.parent;
+  if (!n) { info.style.display = 'none'; return; }
+  const mats = []; n.traverse((o) => { if (o.isMesh) { mats.push([o.material, o.material.emissive.getHex()]); o.material.emissive.setHex(0x6a3a00); } }); picked = mats;
+  const u = n.userData; const label = GROUPS.find((g) => g[0] === groupOf(u))?.[1] ?? u.ifc;
+  info.innerHTML = `<b>${u.long_name || label}</b>${u.name ?? ''}<br>Sınıf: ${u.ifc}${u.klinker ? ' (klinker panel)' : ''}<br>Kat: ${u.storey ?? '—'}<br><code>${u.guid ?? ''}</code>`;
+  info.style.display = 'block';
+}
+
+function animate() { controls.update(); renderer.render(scene, camera); requestAnimationFrame(animate); }
+
+try {
+  await loadScene();
+  const loader = new GLTFLoader();
+  const gltf = await loader.loadAsync('./model.glb', (e) => { if (e.total) $('barfill').style.width = `${(e.loaded / e.total) * 100}%`; });
+  building = gltf.scene; scene.add(building);
+  building.children.slice().forEach((n) => { nodes.push(n); n.traverse((o) => { if (o.isMesh) {
+    o.castShadow = n.userData.ifc !== 'IfcSpace'; o.receiveShadow = true;
+    o.material = o.material.clone(); o.material.flatShading = true; o.material.userData.baseOpacity = o.material.opacity; o.material.needsUpdate = true; } }); });
+  bounds = new THREE.Box3().setFromObject(building);
+  buildUi(sceneInfo.storeys || []); refresh(); setSun(); frame('persp'); $('clip').dispatchEvent(new Event('input'));
+  $('load').remove(); animate();
+  window.__viewer = { nodes: nodes.length, ready: true };
+} catch (e) { console.error(e); fail(`Model yüklenemedi: ${e.message}`); }
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "parcel_id": "synthetic-22x40",
+  "source": {"type": "synthetic", "note": "SENTETİK regresyon parseli (iki ucu yol, iki yanı komşu); gerçek parsel değildir."},
+  "area_tapu_m2": 880.0,
+  "ring_local": [[0, 0], [22, 0], [22, 40], [0, 40]],
+  "roles": {
+    "0": {"role": "front", "adjacent": "road", "road_name": "Örnek Sokak", "road_width_m": 8},
+    "1": {"role": "side_party", "adjacent": "neighbor_parcel"},
+    "2": {"role": "front", "adjacent": "road", "road_name": "Arka Sokak", "road_width_m": 8},
+    "3": {"role": "side_party", "adjacent": "neighbor_parcel"}
+  }
+}
